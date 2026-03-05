@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corrector de Exámenes — Academia Ábacos</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --rojo: #c0392b;
+  --rojo-oscuro: #96281b;
+  --rojo-suave: #fdf0ee;
+  --negro: #1a1a1a;
+  --gris-oscuro: #2d2d2d;
+  --gris-medio: #6b6b6b;
+  --gris-claro: #f4f4f2;
+  --blanco: #fefefe;
+  --verde: #1e7e34;
+  --verde-suave: #eaf5ec;
+  --naranja: #c0761a;
+  --naranja-suave: #fef6ee;
+  --azul: #1a5276;
+  --azul-suave: #eaf0f8;
+  --amarillo: #7d6608;
+  --amarillo-suave: #fefbd8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Source Serif 4', Georgia, serif; background: #ece9e4; color: var(--negro); min-height: 100vh; }
+
+
+/* ── BANNER API KEY ── */
+.apikey-banner {
+  background: #111;
+  border-bottom: 1px solid #2a2a2a;
+}
+.apikey-inner {
+  max-width: 960px; margin: 0 auto;
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.apikey-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #666; white-space: nowrap;
+}
+.apikey-wrap {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px;
+}
+.apikey-input {
+  flex: 1; background: #1a1a1a; border: 1px solid #333;
+  color: #ccc; padding: 6px 12px; font-family: monospace;
+  font-size: 12px; outline: none; border-radius: 2px;
+  transition: border-color 0.2s;
+}
+.apikey-input:focus { border-color: var(--rojo); }
+.apikey-input::placeholder { color: #444; }
+.apikey-toggle {
+  background: none; border: none; color: #555;
+  cursor: pointer; font-size: 14px; padding: 4px;
+  transition: color 0.2s; line-height: 1;
+}
+.apikey-toggle:hover { color: #999; }
+.apikey-status {
+  font-size: 10px; letter-spacing: 1px; white-space: nowrap;
+}
+.apikey-status.ok { color: #4a9a5a; }
+.apikey-status.empty { color: #666; }
+.apikey-help {
+  font-size: 10px; color: #444; text-decoration: none;
+  letter-spacing: 0.5px; white-space: nowrap;
+  transition: color 0.2s;
+}
+.apikey-help:hover { color: #888; }
+
+/* ── HEADER ── */
+header {
+  background: var(--negro);
+  position: relative;
+}
+.header-inner {
+  display: flex; align-items: stretch;
+  max-width: 960px; margin: 0 auto;
+}
+.header-acento { width: 6px; background: var(--rojo); flex-shrink: 0; }
+.header-texto { padding: 24px 32px; flex: 1; }
+.header-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--rojo); margin-bottom: 4px;
+}
+.header-titulo {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px; font-weight: 900; color: #fff; line-height: 1.2;
+}
+.header-sub { font-size: 12px; color: #888; margin-top: 4px; font-style: italic; }
+
+/* ── STEPS NAV ── */
+.steps-nav {
+  background: #111;
+  border-bottom: 1px solid #333;
+}
+.steps-inner {
+  max-width: 960px; margin: 0 auto;
+  display: flex;
+}
+.step-item {
+  padding: 12px 24px;
+  font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #555;
+  border-right: 1px solid #2a2a2a;
+  display: flex; align-items: center; gap: 8px;
+  cursor: default;
+}
+.step-item.activo { color: #fff; background: #1a1a1a; }
+.step-item.completado { color: var(--rojo); }
+.step-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #333; color: #888;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+}
+.step-item.activo .step-num { background: var(--rojo); color: white; }
+.step-item.completado .step-num { background: var(--rojo); color: white; }
+
+/* ── MAIN ── */
+main { max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; }
+
+/* ── PANTALLAS ── */
+.pantalla { display: none; }
+.pantalla.activa { display: block; }
+
+/* ── PANEL GENÉRICO ── */
+.panel {
+  background: var(--blanco);
+  border: 1px solid #ddd;
+  border-top: 4px solid var(--rojo);
+  padding: 32px 36px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.06);
+}
+.panel-titulo {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--rojo); margin-bottom: 20px;
+  padding-bottom: 10px; border-bottom: 1px solid #eee;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-desc { font-size: 13px; color: var(--gris-medio); line-height: 1.65; margin-bottom: 24px; }
+
+/* ── ZONA UPLOAD TEMARIO ── */
+.zona-upload-grande {
+  border: 2px dashed #ccc; border-radius: 3px;
+  padding: 40px 24px; text-align: center; cursor: pointer;
+  transition: all 0.2s; background: var(--gris-claro);
+  position: relative; margin-bottom: 20px;
+}
+.zona-upload-grande:hover, .zona-upload-grande.drag-over {
+  border-color: var(--rojo); background: var(--rojo-suave);
+}
+.zona-upload-grande input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.upload-icono-grande { font-size: 40px; margin-bottom: 10px; }
+.upload-texto-grande { font-size: 14px; color: var(--gris-medio); line-height: 1.6; }
+.upload-texto-grande strong { color: var(--negro); }
+
+/* ── GRID TEMAS CARGADOS ── */
+.temas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+.tema-chip {
+  background: var(--gris-claro);
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 10px 6px;
+  text-align: center;
+  font-size: 11px; font-weight: 600;
+  color: var(--gris-medio);
+  position: relative;
+  transition: all 0.15s;
+}
+.tema-chip.cargado {
+  background: var(--verde-suave);
+  border-color: #a8d5b0;
+  color: var(--verde);
+}
+.tema-chip.cargado .chip-titulo {
+  font-size: 9px; color: #4a9a5a;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: block; margin-top: 3px;
+}
+.tema-chip .btn-eliminar-chip {
+  position: absolute; top: 2px; right: 3px;
+  background: none; border: none; color: #ccc;
+  font-size: 12px; cursor: pointer; line-height: 1; padding: 0;
+  display: none;
+}
+.tema-chip.cargado:hover .btn-eliminar-chip { display: block; }
+.tema-chip.cargado:hover .btn-eliminar-chip:hover { color: var(--rojo); }
+
+/* ── RESUMEN CARGA ── */
+.resumen-carga {
+  background: var(--verde-suave);
+  border: 1px solid #a8d5b0;
+  padding: 14px 20px;
+  font-size: 13px; color: var(--verde);
+  margin-top: 16px; display: none;
+  font-weight: 600;
+}
+.resumen-carga.visible { display: block; }
+
+/* ── FORMULARIO CORRECCIÓN ── */
+.fila-campos {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;
+}
+@media(max-width:600px){ .fila-campos { grid-template-columns: 1fr; } }
+.campo-grupo { display: flex; flex-direction: column; gap: 6px; }
+.campo-grupo.ancho-completo { grid-column: 1 / -1; }
+
+label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--gris-medio);
+}
+
+input[type=text], select, textarea {
+  border: 1px solid #d0d0d0; border-radius: 2px;
+  padding: 10px 14px;
+  font-family: 'Source Serif 4', serif; font-size: 14px;
+  color: var(--negro); background: var(--blanco);
+  transition: border-color 0.2s; outline: none; width: 100%;
+  -webkit-appearance: none;
+}
+input[type=text]:focus, select:focus, textarea:focus {
+  border-color: var(--rojo);
+  box-shadow: 0 0 0 3px rgba(192,57,43,0.08);
+}
+textarea { resize: vertical; min-height: 130px; line-height: 1.65; }
+
+/* select tema con indicador */
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: '▾'; position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%); pointer-events: none;
+  color: var(--gris-medio); font-size: 12px;
+}
+select { cursor: pointer; padding-right: 30px; }
+.tema-ref-badge {
+  margin-top: 6px; font-size: 11px;
+  display: none; align-items: center; gap: 6px;
+}
+.tema-ref-badge.visible { display: flex; }
+.badge-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--verde); flex-shrink: 0;
+}
+.badge-txt { color: var(--verde); font-weight: 600; }
+.badge-txt.sin-ref { color: var(--naranja); }
+.badge-dot.sin-ref { background: var(--naranja); }
+
+/* tabs modo entrada */
+.tabs-entrada {
+  display: flex; gap: 0; margin-bottom: 14px;
+  border-bottom: 2px solid #e0e0e0;
+}
+.tab-btn {
+  background: none; border: none;
+  padding: 8px 16px;
+  font-family: 'Source Serif 4', serif;
+  font-size: 12px; font-weight: 600;
+  color: var(--gris-medio); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: all 0.15s; letter-spacing: 0.5px;
+}
+.tab-btn.activo { color: var(--rojo); border-bottom-color: var(--rojo); }
+.tab-contenido { display: none; }
+.tab-contenido.activo { display: block; }
+
+/* upload examen */
+.zona-upload {
+  border: 2px dashed #ccc; border-radius: 3px;
+  padding: 24px 16px; text-align: center; cursor: pointer;
+  transition: all 0.2s; background: var(--gris-claro);
+  position: relative;
+}
+.zona-upload:hover, .zona-upload.drag-over {
+  border-color: var(--rojo); background: var(--rojo-suave);
+}
+.zona-upload input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.archivos-lista { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.archivo-chip-small {
+  background: var(--negro); color: #fff;
+  font-size: 10px; padding: 3px 8px; border-radius: 2px;
+  display: flex; align-items: center; gap: 5px; font-family: monospace;
+}
+.archivo-chip-small button {
+  background: none; border: none; color: #aaa;
+  cursor: pointer; font-size: 13px; line-height: 1; padding: 0;
+}
+.archivo-chip-small button:hover { color: var(--rojo); }
+
+/* btn principal */
+.btn-principal {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 16px 24px; margin-top: 20px;
+  background: var(--rojo); color: white; border: none;
+  font-family: 'Playfair Display', serif;
+  font-size: 15px; font-weight: 700; letter-spacing: 0.5px;
+  cursor: pointer; transition: background 0.2s, transform 0.1s;
+}
+.btn-principal:hover:not(:disabled) { background: var(--rojo-oscuro); }
+.btn-principal:active:not(:disabled) { transform: scale(0.998); }
+.btn-principal:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-principal.secundario {
+  background: transparent; color: var(--negro);
+  border: 2px solid var(--negro); margin-top: 10px;
+}
+.btn-principal.secundario:hover:not(:disabled) { background: var(--negro); color: white; }
+
+/* error */
+.error-msg {
+  background: var(--rojo-suave); border: 1px solid var(--rojo);
+  color: var(--rojo-oscuro); padding: 12px 16px;
+  font-size: 13px; margin-top: 12px; display: none; border-radius: 2px;
+}
+.error-msg.visible { display: block; }
+
+/* ── LOADER ── */
+.loader-zona {
+  display: none; text-align: center; padding: 48px 32px;
+  background: var(--blanco); border: 1px solid #ddd; margin-bottom: 24px;
+}
+.loader-zona.visible { display: block; }
+.loader-spinner {
+  width: 44px; height: 44px;
+  border: 3px solid #eee; border-top-color: var(--rojo);
+  border-radius: 50%; animation: spin 0.85s linear infinite;
+  margin: 0 auto 18px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-nombre { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--negro); margin-bottom: 6px; }
+.loader-sub { font-size: 13px; color: var(--gris-medio); font-style: italic; }
+.loader-paso { margin-top: 16px; font-size: 11px; color: #bbb; letter-spacing: 0.5px; }
+
+/* ── INFORME ── */
+.informe-zona { display: none; animation: fadeUp 0.4s ease; }
+.informe-zona.visible { display: block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+.inf-cabecera {
+  background: var(--negro); color: white;
+  padding: 28px 36px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  flex-wrap: wrap; gap: 16px;
+}
+.inf-nombre { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; }
+.inf-tema { font-size: 12px; color: #999; margin-top: 4px; font-style: italic; }
+.inf-nota-wrap { text-align: right; }
+.inf-nota-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 52px; font-weight: 900; color: white; line-height: 1;
+}
+.inf-nota-sobre { font-size: 12px; color: #777; }
+.inf-nivel { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--rojo); margin-top: 4px; font-weight: 700; }
+
+.inf-cuerpo {
+  background: var(--blanco); border: 1px solid #ddd;
+  border-top: none; padding: 36px; margin-bottom: 0;
+}
+
+/* nota interna */
+.nota-interna {
+  background: #fffde7; border: 1px solid #f9c800;
+  border-left: 4px solid #f9c800;
+  padding: 16px 20px; margin-bottom: 28px;
+}
+.nota-interna-titulo {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #7d6608; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.nota-interna-texto { font-size: 13px; color: #5d4e00; line-height: 1.65; }
+
+/* tabla resumen */
+.tabla-resumen {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px; margin-bottom: 32px;
+}
+.tabla-resumen th {
+  background: var(--negro); color: white;
+  padding: 9px 14px; text-align: left;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+}
+.tabla-resumen td {
+  padding: 10px 14px; border-bottom: 1px solid #f0f0f0; vertical-align: middle;
+}
+.tabla-resumen tr.total-row td {
+  font-weight: 700; background: var(--gris-claro); border-bottom: none;
+}
+
+.badge-nivel {
+  font-size: 9px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; padding: 3px 8px; border-radius: 2px;
+}
+.nivel-nulo { background: #fde8e8; color: #a00; }
+.nivel-bajo { background: #fff3cd; color: #856404; }
+.nivel-bueno { background: var(--azul-suave); color: var(--azul); }
+.nivel-exhaustivo { background: var(--verde-suave); color: var(--verde); }
+
+/* criterios */
+.seccion-titulo {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gris-medio); font-weight: 700;
+  padding-bottom: 8px; border-bottom: 2px solid var(--rojo);
+  margin-bottom: 24px;
+}
+.criterio-bloque {
+  margin-bottom: 28px; padding-bottom: 28px;
+  border-bottom: 1px solid #eee;
+}
+.criterio-bloque:last-of-type { border-bottom: none; }
+.criterio-head {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 12px;
+  margin-bottom: 10px; flex-wrap: wrap;
+}
+.criterio-nombre { font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 700; flex: 1; }
+.criterio-pts-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.criterio-pts {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 900; color: var(--rojo); line-height: 1;
+}
+.criterio-max { font-size: 10px; color: #bbb; }
+.barra-bg { height: 3px; background: #eee; border-radius: 2px; overflow: hidden; margin-bottom: 12px; }
+.barra-fill { height: 100%; background: var(--rojo); border-radius: 2px; }
+.criterio-texto { font-size: 14px; line-height: 1.75; color: var(--gris-oscuro); }
+
+/* recuadros fortalezas/mejoras */
+.recuadro {
+  padding: 18px 22px; margin-bottom: 14px;
+  border-left: 4px solid; border-radius: 0 2px 2px 0;
+}
+.rec-verde { background: var(--verde-suave); border-color: var(--verde); }
+.rec-naranja { background: var(--naranja-suave); border-color: var(--naranja); }
+.rec-titulo {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.rec-verde .rec-titulo { color: var(--verde); }
+.rec-naranja .rec-titulo { color: var(--naranja); }
+.rec-texto { font-size: 14px; line-height: 1.72; color: var(--gris-oscuro); }
+
+/* recomendación final */
+.rec-final {
+  background: var(--negro); color: white;
+  padding: 28px 36px; margin-top: 0; margin-bottom: 20px;
+}
+.rec-final .rec-titulo { color: var(--rojo); }
+.rec-final .rec-texto { color: #bbb; }
+
+/* acciones */
+.acciones {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 40px;
+}
+.btn-accion {
+  padding: 10px 20px; border: 2px solid var(--negro);
+  background: transparent; font-family: 'Source Serif 4', serif;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s; letter-spacing: 0.5px;
+}
+.btn-accion:hover { background: var(--negro); color: white; }
+.btn-accion.prim { background: var(--rojo); color: white; border-color: var(--rojo); }
+.btn-accion.prim:hover { background: var(--rojo-oscuro); border-color: var(--rojo-oscuro); }
+
+.nota-pie { font-size: 11px; color: #aaa; text-align: center; font-style: italic; padding-bottom: 24px; }
+
+/* print */
+@media print {
+  header, .steps-nav, .panel-entrada-wrap, .acciones, .loader-zona, .nota-pie { display: none !important; }
+  .informe-zona { display: block !important; }
+  body { background: white; }
+  .nota-interna { display: block !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-acento"></div>
+    <div class="header-texto">
+      <div class="header-logo">Academia Ábacos · Oposiciones Maestros Extremadura</div>
+      <div class="header-titulo">Corrector de Exámenes con IA</div>
+      <div class="header-sub">Rúbrica oficial del Tribunal — Desarrollo de temas · 2 horas</div>
+    </div>
+  </div>
+</header>
+
+<div class="apikey-banner">
+  <div class="apikey-inner">
+    <span class="apikey-label">API Key Gemini</span>
+    <div class="apikey-wrap">
+      <input type="password" id="gemini-apikey" class="apikey-input"
+        placeholder="Pega aquí tu clave de Google AI Studio (AIza...)"
+        oninput="actualizarEstadoKey()" autocomplete="off" spellcheck="false">
+      <button class="apikey-toggle" onclick="toggleVerKey()" title="Mostrar/ocultar clave" id="btn-toggle-key">👁</button>
+    </div>
+    <span class="apikey-status empty" id="apikey-status">Sin clave</span>
+    <a class="apikey-help" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">
+      → Obtener clave gratuita
+    </a>
+  </div>
+</div>
+
+<div class="steps-nav">
+  <div class="steps-inner">
+    <div class="step-item activo" id="step1-nav">
+      <span class="step-num">1</span> Cargar temario
+    </div>
+    <div class="step-item" id="step2-nav">
+      <span class="step-num">2</span> Corregir examen
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ═══════════════════════════════════════════
+       PANTALLA 1 — CARGAR TEMARIO
+  ═══════════════════════════════════════════ -->
+  <div class="pantalla activa" id="pantalla-1">
+    <div class="panel">
+      <div class="panel-titulo">📚 Carga del temario de referencia</div>
+      <p class="panel-desc">
+        Sube los documentos de los temas que vas a corregir. La app los indexará por número de tema
+        y los usará como referencia para evaluar el contenido del opositor con precisión.
+        Puedes cargar los 25 temas de una vez o ir añadiendo más adelante.
+      </p>
+
+      <div class="zona-upload-grande" id="zona-upload-temario"
+        ondragover="event.preventDefault(); this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="soltarTemario(event)">
+        <input type="file" id="input-temario" accept=".pdf,.doc,.docx,.txt" multiple
+          onchange="procesarTemario(this.files)">
+        <div class="upload-icono-grande">📂</div>
+        <div class="upload-texto-grande">
+          <strong>Arrastra los archivos de los temas aquí</strong><br>
+          o haz clic para seleccionarlos<br>
+          <span style="font-size:11px;color:#bbb;display:block;margin-top:6px;">
+            PDF, DOC, DOCX, TXT · Nombra los archivos con el número del tema<br>
+            (ej: <em>Tema_07.pdf</em>, <em>tema7.docx</em>, <em>T07_Conocimiento_Medio.pdf</em>)
+          </span>
+        </div>
+      </div>
+
+      <div id="temas-grid" class="temas-grid">
+        <!-- 25 slots -->
+      </div>
+
+      <div class="resumen-carga" id="resumen-carga">
+        ✅ <span id="resumen-texto">0 temas cargados</span>
+      </div>
+    </div>
+
+    <button class="btn-principal" id="btn-continuar" onclick="irACorreccion()">
+      Continuar a la corrección →
+    </button>
+    <button class="btn-principal secundario" onclick="irACorreccionSinTemario()">
+      Continuar sin temario (usar conocimiento general de la IA)
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       PANTALLA 2 — CORRECCIÓN
+  ═══════════════════════════════════════════ -->
+  <div class="pantalla" id="pantalla-2">
+
+    <div class="panel panel-entrada-wrap">
+      <div class="panel-titulo">✏️ Datos del examen</div>
+
+      <div class="fila-campos">
+        <div class="campo-grupo">
+          <label for="nombre-opositor">Nombre del opositor/a</label>
+          <input type="text" id="nombre-opositor" placeholder="Ej: Ismael Serrano">
+        </div>
+
+        <div class="campo-grupo">
+          <label for="sel-tema">Tema examinado</label>
+          <div class="select-wrap">
+            <select id="sel-tema" onchange="actualizarBadgeTema()">
+              <option value="">— Selecciona el tema —</option>
+            </select>
+          </div>
+          <div class="tema-ref-badge" id="tema-ref-badge">
+            <span class="badge-dot" id="badge-dot"></span>
+            <span class="badge-txt" id="badge-txt"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs-entrada">
+        <button class="tab-btn activo" onclick="cambiarTab('texto',this)">✏️ Texto / transcripción</button>
+        <button class="tab-btn" onclick="cambiarTab('imagen',this)">🖼️ Imagen o PDF manuscrito</button>
+      </div>
+
+      <div id="tab-texto" class="tab-contenido activo">
+        <div class="campo-grupo">
+          <label for="examen-texto">Contenido del examen</label>
+          <textarea id="examen-texto" placeholder="Pega aquí el texto del examen del opositor/a o la transcripción del manuscrito..."></textarea>
+        </div>
+      </div>
+
+      <div id="tab-imagen" class="tab-contenido">
+        <div class="zona-upload" id="zona-upload-examen"
+          ondragover="event.preventDefault(); this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="soltarExamen(event)">
+          <input type="file" id="input-examen" accept="image/*,.pdf" multiple
+            onchange="seleccionarExamen(this.files)">
+          <div style="font-size:28px;margin-bottom:8px;">📄</div>
+          <div style="font-size:13px;color:var(--gris-medio);line-height:1.5;">
+            <strong>Arrastra las imágenes o PDF del examen</strong><br>
+            <span style="font-size:11px;color:#bbb;">JPG, PNG, WEBP, PDF · Puedes subir varias páginas</span>
+          </div>
+        </div>
+        <div class="archivos-lista" id="archivos-examen-lista"></div>
+      </div>
+
+      <div class="error-msg" id="error-msg">⚠️ Rellena el nombre, el tema y el contenido del examen.</div>
+
+      <button class="btn-principal" id="btn-corregir" onclick="corregirExamen()">
+        Corregir examen según rúbrica oficial →
+      </button>
+    </div>
+
+    <!-- LOADER -->
+    <div class="loader-zona" id="loader">
+      <div class="loader-spinner"></div>
+      <div class="loader-nombre" id="loader-nombre">—</div>
+      <div class="loader-sub">Analizando el examen con la rúbrica oficial...</div>
+      <div class="loader-paso" id="loader-paso">Iniciando análisis...</div>
+    </div>
+
+    <!-- INFORME -->
+    <div class="informe-zona" id="informe-zona">
+
+      <div class="inf-cabecera">
+        <div>
+          <div class="inf-nombre" id="inf-nombre">—</div>
+          <div class="inf-tema" id="inf-tema">—</div>
+        </div>
+        <div class="inf-nota-wrap">
+          <div class="inf-nota-num" id="inf-nota">—</div>
+          <div class="inf-nota-sobre">sobre 10</div>
+          <div class="inf-nivel" id="inf-nivel">—</div>
+        </div>
+      </div>
+
+      <div class="inf-cuerpo" id="inf-cuerpo"></div>
+
+      <div class="rec-final" id="rec-final">
+        <div class="rec-titulo">Recomendación para subir de nivel</div>
+        <div class="rec-texto" id="rec-final-texto">—</div>
+      </div>
+
+      <div class="acciones">
+        <button class="btn-accion prim" id="btn-descargar" onclick="descargarInforme()">⬇️ Descargar informe</button>
+        <button class="btn-accion" onclick="copiarInforme()">📋 Copiar texto</button>
+        <button class="btn-accion" onclick="nuevoExamen()">↩ Otro examen</button>
+        <button class="btn-accion" onclick="volverTemario()">📚 Gestionar temario</button>
+      </div>
+    </div>
+
+    <div class="nota-pie">Corrector basado en la rúbrica oficial del Tribunal — Cuerpo de Maestros/as · Academia Ábacos · Extremadura</div>
+  </div>
+
+</main>
+
+<script>
+
+// ═══════════════════════════════════════════
+// API KEY GEMINI
+// ═══════════════════════════════════════════
+function actualizarEstadoKey() {
+  var val = document.getElementById('gemini-apikey').value.trim();
+  var st = document.getElementById('apikey-status');
+  if (val.length > 10) {
+    st.textContent = '✓ Clave introducida';
+    st.className = 'apikey-status ok';
+  } else {
+    st.textContent = 'Sin clave';
+    st.className = 'apikey-status empty';
+  }
+}
+function toggleVerKey() {
+  var inp = document.getElementById('gemini-apikey');
+  var btn = document.getElementById('btn-toggle-key');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+// ═══════════════════════════════════════════
+// ESTADO GLOBAL
+// ═══════════════════════════════════════════
+const TOTAL_TEMAS = 25;
+let temasDB = {}; // { num: { titulo, contenido, nombre_archivo } }
+let archivosExamen = [];
+let tabActualExamen = 'texto';
+let informeTextoPlano = '';
+let usarTemario = true;
+
+// ═══════════════════════════════════════════
+// INIT — construir grid de 25 slots
+// ═══════════════════════════════════════════
+function initGrid() {
+  const grid = document.getElementById('temas-grid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= TOTAL_TEMAS; i++) {
+    const div = document.createElement('div');
+    div.className = 'tema-chip' + (temasDB[i] ? ' cargado' : '');
+    div.id = 'chip-tema-' + i;
+    div.innerHTML = temasDB[i]
+      ? `<strong>T${String(i).padStart(2,'0')}</strong>
+         <span class="chip-titulo">${temasDB[i].titulo}</span>
+         <button class="btn-eliminar-chip" onclick="eliminarTema(${i},event)" title="Eliminar">×</button>`
+      : `<strong style="color:#bbb">T${String(i).padStart(2,'0')}</strong>`;
+    grid.appendChild(div);
+  }
+  actualizarResumen();
+  llenarSelectTemas();
+}
+
+function actualizarResumen() {
+  const n = Object.keys(temasDB).length;
+  const el = document.getElementById('resumen-carga');
+  const txt = document.getElementById('resumen-texto');
+  if (n > 0) {
+    el.classList.add('visible');
+    txt.textContent = `${n} tema${n>1?'s':''} cargado${n>1?'s':''}`;
+  } else {
+    el.classList.remove('visible');
+  }
+}
+
+function llenarSelectTemas() {
+  const sel = document.getElementById('sel-tema');
+  const val = sel.value;
+  sel.innerHTML = '<option value="">— Selecciona el tema —</option>';
+  for (let i = 1; i <= TOTAL_TEMAS; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    const label = temasDB[i] ? `Tema ${i} — ${temasDB[i].titulo}` : `Tema ${i}`;
+    opt.textContent = label;
+    sel.appendChild(opt);
+  }
+  if (val) sel.value = val;
+  actualizarBadgeTema();
+}
+
+function actualizarBadgeTema() {
+  const sel = document.getElementById('sel-tema');
+  const badge = document.getElementById('tema-ref-badge');
+  const dot = document.getElementById('badge-dot');
+  const txt = document.getElementById('badge-txt');
+  const num = parseInt(sel.value);
+  if (!num) { badge.classList.remove('visible'); return; }
+  badge.classList.add('visible');
+  if (temasDB[num]) {
+    dot.classList.remove('sin-ref'); txt.classList.remove('sin-ref');
+    txt.textContent = `Referencia del tema cargada: "${temasDB[num].titulo}"`;
+  } else {
+    dot.classList.add('sin-ref'); txt.classList.add('sin-ref');
+    txt.textContent = 'Sin referencia cargada — la IA usará conocimiento general';
+  }
+}
+
+// ═══════════════════════════════════════════
+// PROCESADO DE ARCHIVOS DE TEMARIO
+// ═══════════════════════════════════════════
+function soltarTemario(e) {
+  e.preventDefault();
+  document.getElementById('zona-upload-temario').classList.remove('drag-over');
+  procesarTemario(e.dataTransfer.files);
+}
+
+async function procesarTemario(files) {
+  for (const f of files) {
+    const num = extraerNumeroTema(f.name);
+    const contenido = await leerArchivoTexto(f);
+    const titulo = extraerTitulo(f.name, contenido, num);
+    temasDB[num] = { titulo, contenido, nombre_archivo: f.name };
+    console.log(`Tema ${num} cargado: ${titulo}`);
+  }
+  initGrid();
+}
+
+function extraerNumeroTema(nombre) {
+  // Busca patrones: tema7, tema_7, T07, t7, tema 7, etc.
+  const m = nombre.match(/[tT](?:ema)?[_\s-]?0*(\d{1,2})/i)
+           || nombre.match(/^0*(\d{1,2})[_\s\-\.]/);
+  if (m) {
+    const n = parseInt(m[1]);
+    if (n >= 1 && n <= 25) return n;
+  }
+  // fallback: primer número en el nombre
+  const m2 = nombre.match(/\d+/);
+  if (m2) {
+    const n = parseInt(m2[0]);
+    if (n >= 1 && n <= 25) return n;
+  }
+  return Object.keys(temasDB).length + 1; // posición libre
+}
+
+function extraerTitulo(nombreArchivo, contenido, num) {
+  // Intenta sacar el título de las primeras líneas del contenido
+  if (contenido) {
+    const lineas = contenido.split('\n').map(l => l.trim()).filter(l => l.length > 10);
+    for (const l of lineas.slice(0, 5)) {
+      if (l.length > 15 && l.length < 120 && !l.match(/^\d+$/)) return l;
+    }
+  }
+  // Si no, limpia el nombre del archivo
+  return nombreArchivo
+    .replace(/\.(pdf|docx?|txt)$/i, '')
+    .replace(/[_\-]/g, ' ')
+    .replace(/[tT]ema\s*\d+\s*/i, '')
+    .trim() || `Tema ${num}`;
+}
+
+async function leerArchivoTexto(file) {
+  return new Promise((res) => {
+    if (file.type === 'text/plain') {
+      const r = new FileReader();
+      r.onload = e => res(e.target.result);
+      r.onerror = () => res('');
+      r.readAsText(file, 'UTF-8');
+    } else {
+      // Para PDF/DOCX: los pasaremos como base64 directamente a la API
+      const r = new FileReader();
+      r.onload = e => res(e.target.result); // data URL
+      r.onerror = () => res('');
+      r.readAsDataURL(file);
+    }
+  });
+}
+
+function eliminarTema(num, e) {
+  e.stopPropagation();
+  delete temasDB[num];
+  initGrid();
+}
+
+// ═══════════════════════════════════════════
+// NAVEGACIÓN ENTRE PANTALLAS
+// ═══════════════════════════════════════════
+function irACorreccion() {
+  usarTemario = true;
+  mostrarPantalla(2);
+}
+function irACorreccionSinTemario() {
+  usarTemario = false;
+  mostrarPantalla(2);
+}
+function volverTemario() {
+  mostrarPantalla(1);
+  document.getElementById('informe-zona').classList.remove('visible');
+}
+
+function mostrarPantalla(n) {
+  document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
+  document.getElementById('pantalla-' + n).classList.add('activa');
+  document.querySelectorAll('.step-item').forEach((s, i) => {
+    s.classList.remove('activo', 'completado');
+    if (i + 1 < n) s.classList.add('completado');
+    if (i + 1 === n) s.classList.add('activo');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════
+// TABS MODO ENTRADA EXAMEN
+// ═══════════════════════════════════════════
+function cambiarTab(tab, btn) {
+  tabActualExamen = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('activo'));
+  document.querySelectorAll('.tab-contenido').forEach(c => c.classList.remove('activo'));
+  btn.classList.add('activo');
+  document.getElementById('tab-' + tab).classList.add('activo');
+}
+
+// ═══════════════════════════════════════════
+// ARCHIVOS EXAMEN
+// ═══════════════════════════════════════════
+function soltarExamen(e) {
+  e.preventDefault();
+  document.getElementById('zona-upload-examen').classList.remove('drag-over');
+  seleccionarExamen(e.dataTransfer.files);
+}
+function seleccionarExamen(files) {
+  for (const f of files) archivosExamen.push(f);
+  renderChipsExamen();
+}
+function renderChipsExamen() {
+  const lista = document.getElementById('archivos-examen-lista');
+  lista.innerHTML = '';
+  archivosExamen.forEach((f, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'archivo-chip-small';
+    chip.innerHTML = `${f.name} <button onclick="eliminarExamen(${i})">×</button>`;
+    lista.appendChild(chip);
+  });
+}
+function eliminarExamen(i) {
+  archivosExamen.splice(i, 1);
+  renderChipsExamen();
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Error leyendo archivo'));
+    r.readAsDataURL(file);
+  });
+}
+
+// ═══════════════════════════════════════════
+// PASOS LOADER
+// ═══════════════════════════════════════════
+const PASOS = [
+  'Leyendo el examen...',
+  'Verificando criterio 1a: conocimiento del tema...',
+  'Verificando criterio 1b: contextualización Extremadura...',
+  'Verificando criterio 1c: vocabulario técnico...',
+  'Verificando criterio 1d: fundamentación pedagógica y legislativa...',
+  'Evaluando criterio 2: estructura y originalidad...',
+  'Evaluando criterio 3: redacción y presentación...',
+  'Proyectando criterio 4: lectura oral...',
+  'Comparando con el temario de referencia...',
+  'Calculando puntuaciones finales...',
+  'Redactando informe personalizado...'
+];
+let pasoIdx = 0, pasoTimer;
+function iniciarPasos() {
+  pasoIdx = 0;
+  const el = document.getElementById('loader-paso');
+  el.textContent = PASOS[0];
+  pasoTimer = setInterval(() => {
+    pasoIdx = (pasoIdx + 1) % PASOS.length;
+    el.textContent = PASOS[pasoIdx];
+  }, 2000);
+}
+function pararPasos() { clearInterval(pasoTimer); }
+
+// ═══════════════════════════════════════════
+// PROMPT SISTEMA
+// ═══════════════════════════════════════════
+function buildSystemPrompt(tieneRefTema) {
+  var refPart = tieneRefTema
+    ? 'Tienes acceso al contenido oficial del tema de referencia tal como está en el temario de la academia. Úsalo para detectar omisiones relevantes, valorar la profundidad y la precisión conceptual del opositor. NO inventes contenido ni normativa ausente en el examen.'
+    : 'No tienes temario de referencia. Evalúa con el conocimiento general del área. NO inventes contenido ni normativa ausente en el examen.';
+
+  var omisionesPart = tieneRefTema
+    ? '3. OMISIONES DEL TEMARIO: ¿Qué contenidos relevantes del tema de referencia NO aparecen en el examen? Sé específico y diferencia entre omisiones leves y críticas.'
+    : '';
+
+  var notaInternaDef = tieneRefTema
+    ? '"texto confidencial para el corrector (nivel interno, ajuste a 2h, omisiones del temario)"'
+    : '"texto confidencial para el corrector (nivel interno, ajuste a 2h)"';
+
+  return 'Eres un corrector experto de exámenes de oposiciones al Cuerpo de Maestros/as de Primaria en Extremadura, España. Corriges siguiendo ESTRICTAMENTE la rúbrica oficial del tribunal.\n'
+    + refPart + '\n\n'
+    + '═══════════════════════════════════════════\n'
+    + 'RÚBRICA OFICIAL — EXTREMADURA (10 puntos)\n'
+    + '═══════════════════════════════════════════\n\n'
+    + 'CRITERIO 1 — Conocimiento científico-técnico actualizado (hasta 6 puntos)\n'
+    + 'Subindicadores y rangos por nivel (Nulo | Bajo | Bueno | Exhaustivo):\n\n'
+    + '  1a) Conocimiento exhaustivo, actualizado, desarrollo equilibrado, claridad y precisión. (máx. 2p)\n'
+    + '      Nulo: 0–0.49 | Bajo: 0.5–0.99 | Bueno: 1.0–1.66 | Exhaustivo: 1.67–2.0\n'
+    + '      → Valora: jerarquización de contenidos, actualización con corrientes contemporáneas (neuroeducación, aprendizaje competencial), coherencia entre epígrafes, desarrollo NO sesgado hacia un solo apartado.\n\n'
+    + '  1b) Contextualización en la normativa y realidad educativa de Extremadura. (máx. 1.5p)\n'
+    + '      Nulo: 0–0.37 | Bajo: 0.38–0.74 | Bueno: 0.75–1.24 | Exhaustivo: 1.25–1.5\n'
+    + '      → Valora: cita del Decreto 107/2022, Orden de 9 de diciembre de 2022, Instrucción 14/2025, Ley 4/2011 LEEX. También programas regionales presentes en el examen: Plan INNOVATED, REBEX, eScholarium, Rayuela, RadioEdu, Librarium, Plan Portugal, CRA, ORIENTA XXI, programa INCLUYE, CqAE.\n'
+    + '      IMPORTANTE: solo valora lo que efectivamente aparezca en el examen. No penalices ausencias si el tema no las requiere. No inventes menciones que no estén en el texto.\n\n'
+    + '  1c) Dominio de conceptos específicos y vocabulario técnico preciso. (máx. 2p)\n'
+    + '      Dominio conceptual: hasta 1.5p | Vocabulario preciso: hasta 0.5p\n'
+    + '      Nulo: 0–0.49 | Bajo: 0.5–0.99 | Bueno: 1.0–1.66 | Exhaustivo: 1.67–2.0\n'
+    + '      → Valora: uso apropiado de términos como "andamiaje cognitivo", "situaciones de aprendizaje", "perfil de salida", "Diseño Universal para el Aprendizaje (DUA)", "competencias clave", "saberes básicos", "criterios de evaluación". Penaliza lenguaje coloquial o impreciso.\n\n'
+    + '  1d) Fundamentación pedagógica y referencias legislativas pertinentes. (máx. 2p)\n'
+    + '      Nulo: 0–0.49 | Bajo: 0.5–0.99 | Bueno: 1.0–1.66 | Exhaustivo: 1.67–2.0\n'
+    + '      → Valora: marco legal sólido (LOMLOE/LO 3/2020, RD 157/2022, Decreto 107/2022) y autores de referencia pertinentes al tema (Piaget, Vygotsky, Ausubel, Bruner, César Coll, Gardner, Marchesi, Neus Sanmartí, entre otros). Solo valora lo que aparezca en el examen.\n\n'
+    + 'CRITERIO 2 — Estructura, desarrollo y originalidad (hasta 2 puntos)\n'
+    + '  2a) Introducción, epígrafes, conclusión y bibliografía actualizada. (máx. 0.5p)\n'
+    + '      → La ausencia de cualquiera de estos elementos impide la puntuación máxima en este bloque.\n'
+    + '  2b) Desarrollo completo, equilibrado y coherente en todos sus apartados. (máx. 0.75p)\n'
+    + '      → Penaliza el desequilibrio: epígrafes iniciales muy desarrollados y finales apenas esbozados.\n'
+    + '  2c) Planteamiento original e innovador. (máx. 0.75p)\n'
+    + '      → Valora reflexiones personales fundamentadas, conexión con ODS/Agenda 2030, ejemplos de prácticas innovadoras en Extremadura integrados como ejemplos de aplicación (no como lista). Solo valora lo que figure en el examen.\n\n'
+    + 'CRITERIO 3 — Presentación, orden y redacción (hasta 1 punto)\n'
+    + '  3a) Claridad expositiva, argumentación, coherencia y orden lógico. (máx. 0.4p)\n'
+    + '  3b) Presentación, corrección ortográfica, gramatical y sintáctica. (máx. 0.3p)\n'
+    + '      → Errores a penalizar: siglas con puntos (D.N.I. incorrecto), abreviaturas mal formadas, ausencia de tildes, errores sintácticos graves.\n'
+    + '  3c) Propiedad en uso del lenguaje técnico y riqueza léxica. (máx. 0.3p)\n\n'
+    + 'CRITERIO 4 — Lectura pública del tema (hasta 1 punto)\n'
+    + '  4a) Lectura con solvencia, fluidez y claridad. (máx. 0.5p)\n'
+    + '  4b) Exposición ordenada, pronunciación correcta y clara. (máx. 0.5p)\n'
+    + '  → Si el examen es escrito, indica siempre: "Proyección estimada a partir del texto escrito:" y razona desde la coherencia y fluidez sintáctica.\n\n'
+    + '═══════════════════════════════════════════\n'
+    + 'PASO 1 — NIVEL INTERNO (no lo muestres en el JSON, úsalo para calibrar el feedback)\n'
+    + '═══════════════════════════════════════════\n'
+    + 'Clasifica internamente el examen en uno de estos cuatro niveles:\n\n'
+    + '  SOBRESALIENTE (≥ 8.5): Feedback SINTÉTICO (2-3 frases por criterio). Señala 1-2 matices de precisión.\n'
+    + '    Tono: reconocimiento genuino del trabajo bien hecho, reto al perfeccionismo.\n\n'
+    + '  NOTABLE (7.0–8.4): Feedback EQUILIBRADO (3-5 frases por criterio). Refuerza lo que funciona y señala 2-3 mejoras concretas.\n'
+    + '    Tono: alentador, orientado a la excelencia.\n\n'
+    + '  APROBADO (5.0–6.9): Feedback ORIENTADO A LA MEJORA (5-8 frases por criterio con ejemplos concretos).\n'
+    + '    Identifica el patrón de debilidad principal y da recomendaciones accionables.\n'
+    + '    Tono: honesto, directo, constructivo.\n\n'
+    + '  INSUFICIENTE (< 5.0): Feedback PROFUNDO Y DETALLADO (5-8 frases por criterio). Explica con ejemplos del examen qué falla y por qué.\n'
+    + '    Señala qué trabajar prioritariamente. Tono: firme pero respetuoso, nunca desmotivador.\n\n'
+    + '═══════════════════════════════════════════\n'
+    + 'PASO 2 — REGLAS DE CORRECCIÓN\n'
+    + '═══════════════════════════════════════════\n'
+    + '- Asigna puntuación numérica concreta a cada criterio dentro del rango de su nivel.\n'
+    + '- La suma de los 4 criterios debe ser igual a nota_total.\n'
+    + '- Basa TODO el feedback en lo que está escrito en el examen. No inventes normativa, autores ni contenidos ausentes.\n'
+    + '- Cuando detectes ausencias relevantes, señálalas con precisión: "En tu examen no aparece ninguna referencia a X, lo que limita la puntuación en Y."\n'
+    + '- Cita fragmentos literales del examen en el feedback (positivo y crítico).\n'
+    + '- Dirígete SIEMPRE al opositor/a de tú, con tono cordial, constructivo y profesional.\n'
+    + '- Evita fórmulas vacías ("¡Enhorabuena!", "¡Ánimo!"). Sé genuino y específico.\n\n'
+    + '═══════════════════════════════════════════\n'
+    + 'PASO 3 — NOTA INTERNA PARA EL CORRECTOR\n'
+    + '═══════════════════════════════════════════\n'
+    + 'Genera el campo "nota_interna" con:\n'
+    + '1. NIVEL INTERNO ASIGNADO: cuál de los 4 niveles has aplicado y por qué.\n'
+    + '2. AJUSTE A 2 HORAS: ¿El volumen es coherente con 2h de escritura? ¿Demasiado poco, lo justo, o demasiado?\n'
+    + omisionesPart + '\n'
+    + 'Esta sección NO aparece en el feedback al opositor.\n\n'
+    + '═══════════════════════════════════════════\n'
+    + 'FORMATO — JSON ESTRICTO. Sin markdown, sin texto fuera del JSON.\n'
+    + '═══════════════════════════════════════════\n'
+    + '{\n'
+    + '  "nota_total": número con un decimal (suma exacta de los 4 criterios),\n'
+    + '  "nivel_general": "Sobresaliente | Notable | Aprobado | Insuficiente",\n'
+    + '  "intro": "2-3 frases en tuteo dirigidas al opositor/a, que contextualicen la corrección sin revelar la nota aún. Tono: directo, cordial, profesional.",\n'
+    + '  "nota_interna": ' + notaInternaDef + ',\n'
+    + '  "criterios": [\n'
+    + '    { "numero": "1", "nombre": "Conocimiento científico-técnico actualizado", "maximo": 6, "puntos": número, "nivel": "Nulo o escaso | Bajo / insuficiente | Bueno y correcto | Domina de forma exhaustiva", "feedback": "texto para el opositor, extensión adaptada al nivel interno" },\n'
+    + '    { "numero": "2", "nombre": "Estructura, desarrollo y originalidad", "maximo": 2, "puntos": número, "nivel": "...", "feedback": "..." },\n'
+    + '    { "numero": "3", "nombre": "Presentación, orden y redacción", "maximo": 1, "puntos": número, "nivel": "...", "feedback": "..." },\n'
+    + '    { "numero": "4", "nombre": "Lectura del tema", "maximo": 1, "puntos": número, "nivel": "...", "feedback": "Proyección estimada a partir del texto escrito: ..." }\n'
+    + '  ],\n'
+    + '  "fortalezas": "Párrafo al opositor/a destacando 2-3 puntos fuertes concretos con citas del examen. Extensión adaptada al nivel.",\n'
+    + '  "mejoras": "Párrafo al opositor/a con 2-3 aspectos de mejora accionables y específicos. En niveles bajos, profundiza con ejemplos y recomendaciones concretas de trabajo.",\n'
+    + '  "recomendacion_final": "1-2 acciones prioritarias y específicas para subir de nivel. En niveles altos: sintético y de precisión. En niveles bajos: claro y detallado sobre qué trabajar primero."\n'
+    + '}';
+}
+
+// ═══════════════════════════════════════════
+// CORREGIR EXAMEN
+// ═══════════════════════════════════════════
+async function corregirExamen() {
+  const nombre = document.getElementById('nombre-opositor').value.trim();
+  const numTema = parseInt(document.getElementById('sel-tema').value);
+  const errorEl = document.getElementById('error-msg');
+
+  let tieneContenido = tabActualExamen === 'texto'
+    ? document.getElementById('examen-texto').value.trim().length > 30
+    : archivosExamen.length > 0;
+
+  if (!nombre || !numTema || !tieneContenido) {
+    errorEl.classList.add('visible');
+    return;
+  }
+  errorEl.classList.remove('visible');
+
+  const refTema = usarTemario && temasDB[numTema] ? temasDB[numTema] : null;
+
+  document.getElementById('btn-corregir').disabled = true;
+  document.getElementById('loader').classList.add('visible');
+  document.getElementById('informe-zona').classList.remove('visible');
+  document.getElementById('loader-nombre').textContent = nombre;
+  iniciarPasos();
+
+  try {
+    // Construir partes del mensaje
+    const partes = [];
+
+    // 1. Tema de referencia (si existe)
+    if (refTema) {
+      if (refTema.contenido.startsWith('data:')) {
+        // Es un PDF/DOCX en base64
+        const mediaType = refTema.nombre_archivo.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream';
+        const b64 = refTema.contenido.split(',')[1];
+        if (mediaType === 'application/pdf') {
+          partes.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } });
+          partes.push({ type: 'text', text: `[El documento anterior es el TEMA DE REFERENCIA oficial: Tema ${numTema} — ${refTema.titulo}]` });
+        } else {
+          partes.push({ type: 'text', text: `TEMA DE REFERENCIA (Tema ${numTema} — ${refTema.titulo}):\n\n${refTema.titulo}\n[Archivo en formato no legible como texto — valorar según conocimiento general]` });
+        }
+      } else {
+        partes.push({ type: 'text', text: `TEMA DE REFERENCIA (Tema ${numTema} — ${refTema.titulo}):\n\n${refTema.contenido.substring(0, 12000)}` });
+      }
+    }
+
+    // 2. Datos del examen
+    const temaLabel = refTema ? `Tema ${numTema} — ${refTema.titulo}` : `Tema ${numTema}`;
+    partes.push({ type: 'text', text: `EXAMEN A CORREGIR\nOpositor/a: ${nombre}\nTema: ${temaLabel}\n\n` });
+
+    // 3. Contenido del examen
+    if (tabActualExamen === 'texto') {
+      partes.push({ type: 'text', text: document.getElementById('examen-texto').value.trim() });
+    } else {
+      for (const f of archivosExamen) {
+        const b64 = await fileToBase64(f);
+        if (f.type === 'application/pdf') {
+          partes.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } });
+        } else {
+          partes.push({ type: 'image', source: { type: 'base64', media_type: f.type, data: b64 } });
+        }
+      }
+    }
+
+    var apiKey = document.getElementById('gemini-apikey').value.trim();
+    if (!apiKey) {
+      throw new Error('Necesitas introducir tu clave de API de Google Gemini. Puedes obtenerla gratis en aistudio.google.com');
+    }
+
+    // Construir contenido para Gemini (solo texto — imágenes y PDFs se incluyen como base64)
+    var geminiParts = [];
+    for (var p of partes) {
+      if (p.type === 'text') {
+        geminiParts.push({ text: p.text });
+      } else if (p.type === 'image') {
+        geminiParts.push({ inline_data: { mime_type: p.source.media_type, data: p.source.data } });
+      } else if (p.type === 'document') {
+        geminiParts.push({ inline_data: { mime_type: 'application/pdf', data: p.source.data } });
+      }
+    }
+
+    var geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
+
+    var response = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: buildSystemPrompt(!!refTema) }] },
+        contents: [{ role: 'user', parts: geminiParts }],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 8192,
+          responseMimeType: 'application/json'
+        }
+      })
+    });
+
+    if (!response.ok) {
+      var errData = await response.json().catch(() => ({}));
+      var errMsg = (errData.error && errData.error.message) ? errData.error.message : response.statusText;
+      throw new Error('Error Gemini API (' + response.status + '): ' + errMsg);
+    }
+    var data = await response.json();
+    var raw = data.candidates[0].content.parts.map(function(p){ return p.text || ''; }).join('');
+    var clean = raw.replace(/```json|```/g, '').trim();
+    var inf = JSON.parse(clean);
+
+    pararPasos();
+    document.getElementById('loader').classList.remove('visible');
+    renderInforme(inf, nombre, temaLabel);
+
+  } catch (err) {
+    pararPasos();
+    document.getElementById('loader').classList.remove('visible');
+    document.getElementById('btn-corregir').disabled = false;
+    errorEl.textContent = '⚠️ Error: ' + err.message;
+    errorEl.classList.add('visible');
+    console.error(err);
+  }
+}
+
+// ═══════════════════════════════════════════
+// RENDER INFORME
+// ═══════════════════════════════════════════
+function nivelClass(nivel) {
+  if (!nivel) return 'bueno';
+  const n = nivel.toLowerCase();
+  if (n.includes('nulo') || n.includes('escaso')) return 'nulo';
+  if (n.includes('bajo') || n.includes('insuficiente')) return 'bajo';
+  if (n.includes('exhaustiva') || n.includes('domina')) return 'exhaustivo';
+  return 'bueno';
+}
+
+function renderInforme(inf, nombre, temaLabel) {
+  document.getElementById('inf-nombre').textContent = nombre;
+  document.getElementById('inf-tema').textContent = temaLabel;
+  document.getElementById('inf-nota').textContent = inf.nota_total.toFixed(1);
+  document.getElementById('inf-nivel').textContent = inf.nivel_general.toUpperCase();
+
+  // Color nota
+  const notaEl = document.getElementById('inf-nota');
+  const n = inf.nota_total;
+  notaEl.style.color = n >= 9 ? '#4caf50' : n >= 7 ? '#f9c800' : n >= 5 ? '#ff9800' : '#e53935';
+
+  let html = '';
+
+  // Intro
+  if (inf.intro) {
+    html += `<p style="font-size:14px;line-height:1.75;color:#666;font-style:italic;
+      border-left:3px solid #eee;padding-left:16px;margin-bottom:28px;">${inf.intro}</p>`;
+  }
+
+  // NOTA INTERNA (solo corrector)
+  if (inf.nota_interna) {
+    html += `<div class="nota-interna">
+      <div class="nota-interna-titulo">🔒 Nota interna (solo para el corrector — no compartir con el opositor)</div>
+      <div class="nota-interna-texto">${inf.nota_interna}</div>
+    </div>`;
+  }
+
+  // Tabla resumen
+  html += `<table class="tabla-resumen"><thead><tr>
+    <th>Criterio</th><th>Nivel</th>
+    <th style="text-align:right">Pts.</th><th style="text-align:right">Máx.</th>
+  </tr></thead><tbody>`;
+  inf.criterios.forEach(c => {
+    html += `<tr>
+      <td>${c.numero}. ${c.nombre}</td>
+      <td><span class="badge-nivel nivel-${nivelClass(c.nivel)}">${c.nivel}</span></td>
+      <td style="text-align:right;font-family:'Playfair Display',serif;font-weight:700;color:var(--rojo)">${c.puntos.toFixed(2)}</td>
+      <td style="text-align:right;color:#aaa">${c.maximo}</td>
+    </tr>`;
+  });
+  html += `<tr class="total-row">
+    <td colspan="2">TOTAL</td>
+    <td style="text-align:right;font-family:'Playfair Display',serif;font-size:17px;color:var(--rojo)">${inf.nota_total.toFixed(1)}</td>
+    <td style="text-align:right">10</td>
+  </tr></tbody></table>`;
+
+  // Criterios detalle
+  html += `<div class="seccion-titulo" style="margin-top:8px">Evaluación por criterios</div>`;
+  inf.criterios.forEach(c => {
+    const pct = Math.min(100, Math.round((c.puntos / c.maximo) * 100));
+    html += `<div class="criterio-bloque">
+      <div class="criterio-head">
+        <div class="criterio-nombre">${c.numero}. ${c.nombre}</div>
+        <div class="criterio-pts-wrap">
+          <span class="badge-nivel nivel-${nivelClass(c.nivel)}">${c.nivel}</span>
+          <span class="criterio-pts">${c.puntos.toFixed(2)}</span>
+          <span class="criterio-max">de ${c.maximo} pts</span>
+        </div>
+      </div>
+      <div class="barra-bg"><div class="barra-fill" style="width:${pct}%"></div></div>
+      <p class="criterio-texto">${c.feedback}</p>
+    </div>`;
+  });
+
+  // Fortalezas y mejoras
+  html += `<div style="margin-top:20px">`;
+  if (inf.fortalezas) {
+    html += `<div class="recuadro rec-verde">
+      <div class="rec-titulo">✅ Fortalezas principales</div>
+      <div class="rec-texto">${inf.fortalezas}</div>
+    </div>`;
+  }
+  if (inf.mejoras) {
+    html += `<div class="recuadro rec-naranja">
+      <div class="rec-titulo">⚠️ Aspectos clave de mejora</div>
+      <div class="rec-texto">${inf.mejoras}</div>
+    </div>`;
+  }
+  html += '</div>';
+
+  document.getElementById('inf-cuerpo').innerHTML = html;
+  document.getElementById('rec-final-texto').textContent = inf.recomendacion_final;
+
+  informeTextoPlano = generarTextoPlano(inf, nombre, temaLabel);
+
+  document.getElementById('informe-zona').classList.add('visible');
+  document.getElementById('btn-corregir').disabled = false;
+  document.getElementById('informe-zona').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════
+// TEXTO PLANO (sin nota interna)
+// ═══════════════════════════════════════════
+function generarTextoPlano(inf, nombre, tema) {
+  let t = `INFORME DE EVALUACIÓN — ACADEMIA ÁBACOS\n${'='.repeat(40)}\n\n`;
+  t += `Opositor/a: ${nombre}\nTema: ${tema}\n`;
+  t += `Puntuación: ${inf.nota_total.toFixed(1)} / 10 — ${inf.nivel_general}\n\n`;
+  if (inf.intro) t += `${inf.intro}\n\n`;
+  t += `EVALUACIÓN POR CRITERIOS\n${'─'.repeat(25)}\n\n`;
+  inf.criterios.forEach(c => {
+    t += `${c.numero}. ${c.nombre} — ${c.puntos.toFixed(2)} pts / ${c.maximo} (${c.nivel})\n${c.feedback}\n\n`;
+  });
+  t += `FORTALEZAS\n${inf.fortalezas}\n\n`;
+  t += `ASPECTOS DE MEJORA\n${inf.mejoras}\n\n`;
+  t += `RECOMENDACIÓN FINAL\n${inf.recomendacion_final}\n`;
+  return t;
+}
+
+// ═══════════════════════════════════════════
+// ACCIONES
+// ═══════════════════════════════════════════
+function descargarInforme() {
+  var btn = document.getElementById("btn-descargar");
+  var orig = btn.textContent;
+  btn.textContent = "Preparando...";
+  btn.disabled = true;
+  try {
+    var estilos = "";
+    try {
+      estilos = Array.from(document.styleSheets).map(function(sheet) {
+        try { return Array.from(sheet.cssRules).map(function(r){ return r.cssText; }).join(" "); }
+        catch(e) { return ""; }
+      }).join(" ");
+    } catch(e) {}
+
+    var zona = document.getElementById("informe-zona");
+    var clone = zona.cloneNode(true);
+    var ni = clone.querySelector(".nota-interna");
+    if (ni) ni.remove();
+    var ac = clone.querySelector(".acciones");
+    if (ac) ac.remove();
+
+    var nombreRaw = (document.getElementById("nombre-opositor").value || "opositor").trim();
+    var nombre = nombreRaw.split(" ").join("_");
+    var temaNum = document.getElementById("sel-tema").value || "X";
+
+    var extra = [
+      "* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }",
+      "body { background: #ece9e4; margin: 0; padding: 0; }",
+      ".informe-zona { display: block !important; max-width: 860px; margin: 0 auto; padding: 24px; }",
+      ".acciones, .nota-interna { display: none !important; }",
+      ".banner-pdf { background: #1a1a1a; color: white; text-align: center;",
+      "padding: 14px 20px; font-family: sans-serif; font-size: 13px;",
+      "position: sticky; top: 0; z-index: 999; }",
+      "@media print { .banner-pdf { display: none !important; } body { background: white; } @page { margin: 1.2cm; } }"
+    ].join(" ");
+
+    var banner = "<div class=\"banner-pdf\">";
+    banner += "<strong>Para guardar como PDF:</strong> ";
+    banner += "pulsa <strong>Ctrl+P</strong> (Windows) o <strong>Cmd+P</strong> (Mac) ";
+    banner += "&rarr; en Destino elige <strong>Guardar como PDF</strong>";
+    banner += "</div>";
+
+    var h = "<!DOCTYPE html><html lang=\"es\"><head><meta charset=\"UTF-8\">";
+    h += "<title>Informe " + nombreRaw + " - Tema " + temaNum + "</title>";
+    h += "<link href=\"https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&display=swap\" rel=\"stylesheet\">";
+    h += "<style>" + estilos + extra + "</style>";
+    h += "</head><body>";
+    h += banner;
+    h += "<div class=\"informe-zona\">" + clone.innerHTML + "</div>";
+    h += "</body></html>";
+
+    var blob = new Blob([h], { type: "text/html;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "informe_" + nombre + "_tema" + temaNum + ".html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  } catch(err) {
+    alert("Error: " + err.message);
+  } finally {
+    btn.textContent = orig;
+    btn.disabled = false;
+  }
+}
+function copiarInforme() {
+  navigator.clipboard.writeText(informeTextoPlano).then(function() {
+    var btn = document.querySelector('[onclick="copiarInforme()"]');
+    var orig = btn.textContent;
+    btn.textContent = "✅ Copiado";
+    setTimeout(function(){ btn.textContent = orig; }, 2000);
+  }).catch(function() {
+    alert("No se pudo copiar automáticamente.");
+  });
+}
+function nuevoExamen() {
+  document.getElementById('nombre-opositor').value = '';
+  document.getElementById('sel-tema').value = '';
+  document.getElementById('examen-texto').value = '';
+  archivosExamen = [];
+  renderChipsExamen();
+  document.getElementById('informe-zona').classList.remove('visible');
+  document.getElementById('error-msg').classList.remove('visible');
+  actualizarBadgeTema();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+initGrid();
+</script>
+</body>
+</html>
