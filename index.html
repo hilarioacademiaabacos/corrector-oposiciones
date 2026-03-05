@@ -1064,7 +1064,8 @@ function buildSystemPrompt(tieneRefTema) {
     + '  "fortalezas": "Párrafo al opositor/a destacando 2-3 puntos fuertes concretos con citas del examen. Extensión adaptada al nivel.",\n'
     + '  "mejoras": "Párrafo al opositor/a con 2-3 aspectos de mejora accionables y específicos. En niveles bajos, profundiza con ejemplos y recomendaciones concretas de trabajo.",\n'
     + '  "recomendacion_final": "1-2 acciones prioritarias y específicas para subir de nivel. En niveles altos: sintético y de precisión. En niveles bajos: claro y detallado sobre qué trabajar primero."\n'
-    + '}';
+    + '}'
+    + '\n\nIMPORTANTE: Mantén cada campo de feedback bajo 300 palabras. El JSON completo no debe superar 3000 tokens. Es obligatorio que el JSON esté completo y bien cerrado.';
 }
 
 // ═══════════════════════════════════════════
@@ -1159,7 +1160,7 @@ async function corregirExamen() {
         contents: [{ role: 'user', parts: geminiParts }],
         generationConfig: {
           temperature: 0.3,
-          maxOutputTokens: 8192,
+          maxOutputTokens: 16384,
           responseMimeType: 'application/json'
         }
       })
@@ -1171,9 +1172,49 @@ async function corregirExamen() {
       throw new Error('Error Gemini API (' + response.status + '): ' + errMsg);
     }
     var data = await response.json();
-    var raw = data.candidates[0].content.parts.map(function(p){ return p.text || ''; }).join('');
-    var clean = raw.replace(/```json|```/g, '').trim();
-    var inf = JSON.parse(clean);
+
+    // Verificar que hay candidatos válidos
+    if (!data.candidates || !data.candidates[0]) {
+      var blocked = data.promptFeedback ? JSON.stringify(data.promptFeedback) : 'Sin candidatos';
+      throw new Error('Gemini no devolvió respuesta: ' + blocked);
+    }
+
+    var candidate = data.candidates[0];
+
+    // Verificar finish reason
+    if (candidate.finishReason && candidate.finishReason !== 'STOP' && candidate.finishReason !== 'MAX_TOKENS') {
+      throw new Error('Respuesta bloqueada por Gemini: ' + candidate.finishReason);
+    }
+
+    var raw = candidate.content.parts.map(function(p){ return p.text || ''; }).join('');
+    var clean = raw.replace(/^```json\s*/,'').replace(/```\s*$/,'').trim();
+
+    // Si el JSON viene truncado, intentar repararlo
+    var inf;
+    try {
+      inf = JSON.parse(clean);
+    } catch(e) {
+      // Intentar cerrar el JSON truncado
+      var repaired = clean;
+      // Contar llaves y corchetes sin cerrar
+      var opens = (repaired.match(/{/g)||[]).length - (repaired.match(/}/g)||[]).length;
+      var openArr = (repaired.match(/\[/g)||[]).length - (repaired.match(/\]/g)||[]).length;
+      // Cerrar cadenas abiertas
+      var lastQuote = repaired.lastIndexOf('"');
+      var prevQuote = repaired.lastIndexOf('"', lastQuote - 1);
+      if (lastQuote > 0 && (repaired.match(/"/g)||[]).length % 2 !== 0) {
+        repaired = repaired.substring(0, lastQuote) + '... [texto truncado]"';
+      }
+      for (var a = 0; a < openArr; a++) repaired += ']';
+      for (var b = 0; b < opens; b++) repaired += '}';
+      try {
+        inf = JSON.parse(repaired);
+        // Avisar que fue truncado
+        if (inf.recomendacion_final) inf.recomendacion_final += ' ⚠️ (Nota: la respuesta fue truncada por límite de tokens)';
+      } catch(e2) {
+        throw new Error('El modelo devolvió un JSON malformado. Inténtalo de nuevo o reduce la longitud del examen.');
+      }
+    }
 
     pararPasos();
     document.getElementById('loader').classList.remove('visible');
