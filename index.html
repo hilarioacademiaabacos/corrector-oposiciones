@@ -586,7 +586,7 @@ select { cursor: pointer; padding-right: 30px; }
       <div class="fila-campos">
         <div class="campo-grupo">
           <label for="nombre-opositor">Nombre del opositor/a</label>
-          <input type="text" id="nombre-opositor" placeholder="Ej: Ismael Serrano">
+          <input type="text" id="nombre-opositor" placeholder="Ej: Fernando Rodríguez">
         </div>
 
         <div class="campo-grupo">
@@ -1149,7 +1149,7 @@ async function corregirExamen() {
       }
     }
 
-    var geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
+    var geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
 
     var response = await fetch(geminiUrl, {
       method: 'POST',
