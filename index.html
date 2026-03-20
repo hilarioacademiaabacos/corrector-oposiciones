@@ -586,7 +586,7 @@ select { cursor: pointer; padding-right: 30px; }
       <div class="fila-campos">
         <div class="campo-grupo">
           <label for="nombre-opositor">Nombre del opositor/a</label>
-          <input type="text" id="nombre-opositor" placeholder="Ej: Ismael Serrano">
+          <input type="text" id="nombre-opositor" placeholder="Ej: Fernando Rodríguez">
         </div>
 
         <div class="campo-grupo">
@@ -972,7 +972,7 @@ function buildSystemPrompt(tieneRefTema) {
     : 'Sin temario de referencia. Evalúa con conocimiento general. NO inventes contenido ausente.';
 
   var omisiones = tieneRefTema
-    ? '3. OMISIONES: contenidos del temario no incluidos (distingue leves de críticas).'
+    ? '4. OMISIONES: contenidos del temario no incluidos (distingue leves de críticas).'
     : '';
 
   return 'Eres corrector experto de oposiciones Cuerpo de Maestros Primaria Extremadura. ' + ref + '\n\n'
@@ -980,26 +980,51 @@ function buildSystemPrompt(tieneRefTema) {
     + 'C1 Conocimiento científico-técnico (máx.6p):\n'
     + '  1a Conocimiento exhaustivo y actualizado (máx.2p): Nulo 0-0.49|Bajo 0.5-0.99|Bueno 1-1.66|Exhaustivo 1.67-2\n'
     + '  1b Contextualización Extremadura (máx.1.5p): Nulo 0-0.37|Bajo 0.38-0.74|Bueno 0.75-1.24|Exhaustivo 1.25-1.5\n'
-    + '     → Valora solo lo que aparezca: Decreto 107/2022, Orden dic.2022, Instrucción 14/2025, LEEX, Plan INNOVATED, REBEX, eScholarium, Rayuela, RadioEdu, Plan Portugal, CRA, ORIENTA XXI, INCLUYE, CqAE.\n'
+    + '     Solo valora lo que aparezca: Decreto 107/2022, Orden dic.2022, Instrucción 14/2025, LEEX, Plan INNOVATED, REBEX, eScholarium, Rayuela, RadioEdu, Plan Portugal, CRA, ORIENTA XXI, INCLUYE, CqAE.\n'
     + '  1c Dominio conceptos y vocabulario técnico (máx.2p): Nulo 0-0.49|Bajo 0.5-0.99|Bueno 1-1.66|Exhaustivo 1.67-2\n'
-    + '     → Valora: DUA, situaciones de aprendizaje, perfil de salida, saberes básicos, andamiaje cognitivo.\n'
+    + '     Valora: DUA, situaciones de aprendizaje, perfil de salida, saberes básicos, andamiaje cognitivo.\n'
     + '  1d Fundamentación pedagógica y legislativa (máx.2p): Nulo 0-0.49|Bajo 0.5-0.99|Bueno 1-1.66|Exhaustivo 1.67-2\n'
-    + '     → LOMLOE, RD 157/2022, Decreto 107/2022; autores: Piaget, Vygotsky, Ausubel, Bruner, Coll, Gardner, Marchesi, Sanmartí.\n'
+    + '     LOMLOE, RD 157/2022, Decreto 107/2022; autores: Piaget, Vygotsky, Ausubel, Bruner, Coll, Gardner, Marchesi, Sanmartí.\n'
     + 'C2 Estructura y originalidad (máx.2p):\n'
     + '  2a Intro+epígrafes+conclusión+bibliografía (máx.0.5p)\n'
     + '  2b Desarrollo equilibrado y coherente (máx.0.75p)\n'
-    + '  2c Originalidad e innovación (máx.0.75p) → ODS, proyectos Extremadura integrados como ejemplos.\n'
+    + '  2c Originalidad e innovación (máx.0.75p): ODS, proyectos Extremadura integrados como ejemplos.\n'
     + 'C3 Presentación y redacción (máx.1p):\n'
     + '  3a Claridad y orden lógico (máx.0.4p)\n'
-    + '  3b Ortografía y gramática (máx.0.3p) → penaliza siglas con puntos, tildes, abreviaturas mal formadas\n'
+    + '  3b Ortografía, gramática y sintáctica (máx.0.3p)\n'
     + '  3c Vocabulario técnico y riqueza léxica (máx.0.3p)\n'
     + 'C4 Lectura pública (máx.1p): estima proyección desde coherencia del texto escrito.\n\n'
+    + '══════════════════════════════════\n'
+    + 'SISTEMA DE PENALIZACIONES ORTOGRÁFICAS (aplica sobre C3b)\n'
+    + '══════════════════════════════════\n'
+    + 'Regla de penalización:\n'
+    + '- Cada falta ortográfica grave: -0.5 puntos sobre la nota final (no solo sobre C3).\n'
+    + '- Errores de acentuación: cada 3 errores de tilde equivalen a 1 falta (-0.5p).\n'
+    + '- La nota final nunca puede ser negativa por penalizaciones.\n\n'
+    + 'Errores que cuentan como FALTA GRAVE:\n'
+    + '  · Faltas de ortografía léxica (b/v, h, ll/y, g/j, etc.)\n'
+    + '  · Errores graves de puntuación (ausencia de punto final, comas que separan sujeto y verbo).\n'
+    + '  · Uso de abreviaturas no convencionales (xq, tb, dnd, x, d → prohibidas en oposiciones).\n'
+    + '  · Abreviatura sin punto de cierre (ej: "pag" en lugar de "pág.").\n'
+    + '  · Abreviatura compleja sin espacio tras cada punto (ej: "p.ej." en lugar de "p. ej."; "EE.UU." en lugar de "EE. UU.").\n'
+    + '  · Número ordinal sin punto antes de letra volada (ej: "1º" en lugar de "1.º"; "2ª" en lugar de "2.ª").\n'
+    + '  · Sigla con puntos entre letras (ej: "D.N.I." en lugar de "DNI"; "L.O.M.L.O.E." en lugar de "LOMLOE").\n\n'
+    + 'Errores que cuentan como ERROR DE ACENTUACIÓN (3 = 1 falta):\n'
+    + '  · Tilde omitida o incorrecta en cualquier palabra.\n'
+    + '  · Abreviatura que debería llevar tilde y no la lleva (ej: "pag." en lugar de "pág.", "cod." en lugar de "cód.").\n\n'
+    + 'Abreviaturas correctas de referencia (RAE / uso en Extremadura):\n'
+    + '  art./arts. | pág./págs. | núm./núms. o n.º/n.os | cap./caps. | sig./ss. | etc.\n'
+    + '  U. D./UU. DD. | P. D./PP. DD. | p. ej. | C. A./CC. AA. | R. D./RR. DD. | L. O./LL. OO.\n'
+    + '  Siglas sin puntos: LOMLOE, RD, DUA, TIC, ONG, EE. UU. (esta última con espacio)\n\n'
+    + 'IMPORTANTE: Las siglas NO llevan puntos entre letras ni marca de plural con -s (las ONG, no las ONGs).\n'
+    + 'Las abreviaturas SÍ marcan plural duplicando letras (CC. AA.) o añadiendo -s (págs.).\n\n'
+    + '══════════════════════════════════\n'
     + 'NIVEL INTERNO (calibra profundidad del feedback, no lo escribas en el JSON):\n'
-    + '  SOBRESALIENTE ≥8.5 → feedback sintético, 2-3 frases por criterio, matices de precisión.\n'
+    + '  SOBRESALIENTE ≥8.5 → feedback sintético, 2-3 frases por criterio.\n'
     + '  NOTABLE 7-8.4 → feedback equilibrado, 3-4 frases, refuerza y señala 2-3 mejoras.\n'
     + '  APROBADO 5-6.9 → feedback orientado a mejora, 4-5 frases, recomendaciones accionables.\n'
     + '  INSUFICIENTE <5 → feedback detallado, 5-6 frases, explica qué falla con ejemplos del examen.\n\n'
-    + 'REGLAS:\n'
+    + 'REGLAS GENERALES:\n'
     + '- Solo evalúa lo que está escrito. Señala ausencias con: "No aparece X, lo que limita la nota en Y."\n'
     + '- Cita fragmentos literales del examen.\n'
     + '- Dirígete siempre de tú, tono cordial y constructivo. Sin fórmulas vacías.\n'
@@ -1007,17 +1032,32 @@ function buildSystemPrompt(tieneRefTema) {
     + 'NOTA INTERNA (campo nota_interna, no visible al opositor):\n'
     + '1. Nivel interno asignado y justificación.\n'
     + '2. Ajuste a 2h de escritura (poco/justo/demasiado).\n'
+    + '3. Detalle técnico de penalizaciones: lista cada error detectado con su tipo y penalización.\n'
     + omisiones + '\n\n'
     + 'RESPONDE SOLO CON JSON VÁLIDO, SIN MARKDOWN, SIN TEXTO FUERA DEL JSON.\n'
-    + 'LÍMITE ESTRICTO: cada campo de feedback máximo 150 palabras. JSON completo máximo 2500 tokens.\n'
-    + 'Es OBLIGATORIO que el JSON esté completo y bien cerrado con todas sus llaves.\n\n'
-    + '{"nota_total":número,"nivel_general":"Sobresaliente|Notable|Aprobado|Insuficiente","intro":"2 frases de intro al opositor sin revelar nota","nota_interna":"confidencial para corrector",'
+    + 'LÍMITE: cada campo de feedback máximo 150 palabras. JSON completo máximo 3000 tokens.\n'
+    + 'El JSON debe estar COMPLETO y BIEN CERRADO.\n\n'
+    + '{"nota_total":número_con_penalizaciones_aplicadas,'
+    + '"nota_sin_penalizaciones":número,'
+    + '"nivel_general":"Sobresaliente|Notable|Aprobado|Insuficiente",'
+    + '"intro":"2 frases de intro al opositor sin revelar nota",'
+    + '"nota_interna":"confidencial: nivel interno, ajuste 2h, detalle técnico de cada error ortográfico/abreviatura detectado",'
+    + '"penalizaciones":{'
+    + '"faltas_graves":número_entero,'
+    + '"errores_acentuacion":número_entero,'
+    + '"faltas_equivalentes_por_acentuacion":número_con_un_decimal,'
+    + '"total_penalizacion":número_con_un_decimal,'
+    + '"detalle":["descripción error 1 con cita textual","descripción error 2 con cita textual"]'
+    + '},'
     + '"criterios":['
     + '{"numero":"1","nombre":"Conocimiento científico-técnico","maximo":6,"puntos":número,"nivel":"Nulo o escaso|Bajo/insuficiente|Bueno y correcto|Domina de forma exhaustiva","feedback":"texto"},'
     + '{"numero":"2","nombre":"Estructura y originalidad","maximo":2,"puntos":número,"nivel":"...","feedback":"..."},'
     + '{"numero":"3","nombre":"Presentación y redacción","maximo":1,"puntos":número,"nivel":"...","feedback":"..."},'
     + '{"numero":"4","nombre":"Lectura del tema","maximo":1,"puntos":número,"nivel":"...","feedback":"Proyección estimada desde el texto: ..."}'
-    + '],"fortalezas":"2-3 puntos fuertes con citas del examen","mejoras":"2-3 mejoras concretas accionables","recomendacion_final":"1-2 acciones prioritarias para subir de nivel"}';
+    + '],'
+    + '"fortalezas":"2-3 puntos fuertes con citas del examen",'
+    + '"mejoras":"2-3 mejoras concretas accionables",'
+    + '"recomendacion_final":"1-2 acciones prioritarias para subir de nivel"}';
 }
 // ═══════════════════════════════════════════
 // CORREGIR EXAMEN
@@ -1204,6 +1244,22 @@ function renderInforme(inf, nombre, temaLabel) {
   const n = inf.nota_total;
   notaEl.style.color = n >= 9 ? '#4caf50' : n >= 7 ? '#f9c800' : n >= 5 ? '#ff9800' : '#e53935';
 
+  // Mostrar nota sin penalizaciones si hay penalizaciones
+  var subtituloPen = document.getElementById('inf-subtitulo-pen');
+  if (!subtituloPen) {
+    subtituloPen = document.createElement('div');
+    subtituloPen.id = 'inf-subtitulo-pen';
+    subtituloPen.style.cssText = 'font-size:11px;color:#888;margin-top:2px;letter-spacing:0.5px;';
+    notaEl.parentNode.appendChild(subtituloPen);
+  }
+  var pen = inf.penalizaciones;
+  if (pen && pen.total_penalizacion && pen.total_penalizacion > 0) {
+    subtituloPen.textContent = '(' + (inf.nota_sin_penalizaciones || '').toString() + ' − ' + pen.total_penalizacion.toFixed(1) + ' pen.)';
+    subtituloPen.style.display = 'block';
+  } else {
+    subtituloPen.style.display = 'none';
+  }
+
   let html = '';
 
   // Intro
@@ -1220,6 +1276,32 @@ function renderInforme(inf, nombre, temaLabel) {
     </div>`;
   }
 
+  // SECCIÓN PENALIZACIONES ORTOGRÁFICAS
+  var pen = inf.penalizaciones;
+  if (pen && (pen.total_penalizacion > 0 || (pen.detalle && pen.detalle.length > 0))) {
+    var hayPen = pen.total_penalizacion > 0;
+    html += '<div class="pen-bloque" style="background:#1a1010;border:1px solid #5c2020;border-radius:4px;padding:16px 20px;margin-bottom:20px;">';
+    html += '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#cc4444;margin-bottom:10px;">⚠ Penalizaciones ortográficas detectadas</div>';
+    html += '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:12px;">';
+    html += '<div style="font-size:12px;color:#ccc;">Faltas graves: <strong style="color:#fff">' + (pen.faltas_graves || 0) + '</strong></div>';
+    html += '<div style="font-size:12px;color:#ccc;">Errores de acentuación: <strong style="color:#fff">' + (pen.errores_acentuacion || 0) + '</strong> <span style="color:#888">(= ' + parseFloat(pen.faltas_equivalentes_por_acentuacion || 0).toFixed(1) + ' faltas)</span></div>';
+    if (hayPen) {
+      html += '<div style="font-size:13px;font-weight:700;color:#cc4444;">Penalización total: −' + parseFloat(pen.total_penalizacion).toFixed(1) + ' pts</div>';
+    }
+    html += '</div>';
+    if (pen.detalle && pen.detalle.length > 0) {
+      html += '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#888;margin-bottom:6px;text-transform:uppercase;">Detalle de errores:</div>';
+      html += '<ul style="margin:0;padding-left:18px;">';
+      pen.detalle.forEach(function(e) {
+        html += '<li style="font-size:12px;color:#ccc;line-height:1.7;">' + e + '</li>';
+      });
+      html += '</ul>';
+    } else if (!hayPen) {
+      html += '<div style="font-size:12px;color:#4a9a5a;">✓ No se detectaron errores ortográficos ni de abreviaturas reseñables.</div>';
+    }
+    html += '</div>';
+  }
+
   // Tabla resumen
   html += `<table class="tabla-resumen"><thead><tr>
     <th>Criterio</th><th>Nivel</th>
@@ -1233,11 +1315,10 @@ function renderInforme(inf, nombre, temaLabel) {
       <td style="text-align:right;color:#aaa">${c.maximo}</td>
     </tr>`;
   });
-  html += `<tr class="total-row">
-    <td colspan="2">TOTAL</td>
-    <td style="text-align:right;font-family:'Playfair Display',serif;font-size:17px;color:var(--rojo)">${inf.nota_total.toFixed(1)}</td>
-    <td style="text-align:right">10</td>
-  </tr></tbody></table>`;
+  var penStr = (pen && pen.total_penalizacion > 0) ? ' <span style="font-size:11px;color:#cc4444;font-family:sans-serif;font-weight:400">(-' + parseFloat(pen.total_penalizacion).toFixed(1) + ')</span>' : '';
+  html += '<tr class="total-row"><td colspan="2">TOTAL</td>';
+  html += '<td style="text-align:right;font-family:\'Playfair Display\',serif;font-size:17px;color:var(--rojo)">' + inf.nota_total.toFixed(1) + penStr + '</td>';
+  html += '<td style="text-align:right">10</td></tr></tbody></table>';
 
   // Criterios detalle
   html += `<div class="seccion-titulo" style="margin-top:8px">Evaluación por criterios</div>`;
@@ -1289,7 +1370,23 @@ function renderInforme(inf, nombre, temaLabel) {
 function generarTextoPlano(inf, nombre, tema) {
   let t = `INFORME DE EVALUACIÓN — ACADEMIA ÁBACOS\n${'='.repeat(40)}\n\n`;
   t += `Opositor/a: ${nombre}\nTema: ${tema}\n`;
-  t += `Puntuación: ${inf.nota_total.toFixed(1)} / 10 — ${inf.nivel_general}\n\n`;
+  t += 'Puntuación: ' + inf.nota_total.toFixed(1) + ' / 10 — ' + inf.nivel_general;
+  var pen2 = inf.penalizaciones;
+  if (pen2 && pen2.total_penalizacion > 0) {
+    t += ' (nota sin penalizaciones: ' + (inf.nota_sin_penalizaciones || '') + ')';
+  }
+  t += '\n\n';
+  if (pen2 && (pen2.total_penalizacion > 0 || (pen2.detalle && pen2.detalle.length > 0))) {
+    t += 'PENALIZACIONES ORTOGRÁFICAS\n' + '-'.repeat(25) + '\n';
+    t += 'Faltas graves: ' + (pen2.faltas_graves || 0) + '\n';
+    t += 'Errores de acentuación: ' + (pen2.errores_acentuacion || 0) + ' (= ' + parseFloat(pen2.faltas_equivalentes_por_acentuacion || 0).toFixed(1) + ' faltas)\n';
+    t += 'Penalización total: -' + parseFloat(pen2.total_penalizacion || 0).toFixed(1) + ' pts\n';
+    if (pen2.detalle && pen2.detalle.length > 0) {
+      t += 'Detalle:\n';
+      pen2.detalle.forEach(function(e){ t += '  · ' + e + '\n'; });
+    }
+    t += '\n';
+  }
   if (inf.intro) t += `${inf.intro}\n\n`;
   t += `EVALUACIÓN POR CRITERIOS\n${'─'.repeat(25)}\n\n`;
   inf.criterios.forEach(c => {
